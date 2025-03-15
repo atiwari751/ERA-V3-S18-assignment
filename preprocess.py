@@ -29,7 +29,7 @@ def format_instruction(row):
 
 def preprocess_open_assistant_dataset(dataset):
     """
-    Preprocess the Open Assistant dataset for fine-tuning.
+    Preprocess the Open Assistant dataset for fine-tuning with TRL 0.15.2.
     
     Args:
         dataset: The raw Open Assistant dataset
@@ -39,17 +39,31 @@ def preprocess_open_assistant_dataset(dataset):
     """
     print("Preprocessing Open Assistant dataset...")
     
-    # For simplicity, we'll just use the text field directly
-    # This approach works with the basic SFTTrainer
+    # Extract only the necessary fields for training
+    cleaned_data = []
     
-    # If the dataset doesn't have a 'text' field, we'll create one
-    if 'text' not in dataset.column_names:
-        dataset = dataset.map(
-            lambda x: {'text': format_instruction(x)},
-            remove_columns=dataset.column_names
-        )
+    for example in dataset:
+        # Extract only the text field and create a clean example
+        if 'text' in example and example['text'] and isinstance(example['text'], str):
+            # Format based on role if available
+            if 'role' in example:
+                if example['role'] == 'prompter':
+                    text = f"Human: {example['text']}"
+                elif example['role'] == 'assistant':
+                    text = f"Assistant: {example['text']}"
+                else:
+                    text = example['text']
+            else:
+                text = example['text']
+                
+            # Add to cleaned data
+            cleaned_data.append({"text": text})
     
-    print(f"Processed dataset contains {len(dataset)} examples")
-    print(f"Sample processed example: {dataset[0]}")
+    # Create a new dataset with only the text field
+    processed_dataset = Dataset.from_list(cleaned_data)
     
-    return dataset 
+    print(f"Processed dataset contains {len(processed_dataset)} examples")
+    if len(processed_dataset) > 0:
+        print(f"Sample processed example: {processed_dataset[0]}")
+    
+    return processed_dataset 

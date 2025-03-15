@@ -69,12 +69,23 @@ def train_model(model, tokenizer, dataset):
     # Get training arguments
     training_args = get_training_arguments()
     
-    # Create SFT Trainer with minimal parameters
+    # Get SFT configuration
+    sft_config = get_sft_config()
+    
+    # Define a custom data collator to ensure proper padding and truncation
+    from transformers import DataCollatorForLanguageModeling
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=False  # We're not doing masked language modeling
+    )
+    
+    # Create SFT Trainer with proper configuration
     trainer = SFTTrainer(
         model=model,
         train_dataset=dataset,
         args=training_args,
         tokenizer=tokenizer,  # This will show a deprecation warning but still works
+        data_collator=data_collator,  # Use our custom data collator
     )
     
     # Start training
