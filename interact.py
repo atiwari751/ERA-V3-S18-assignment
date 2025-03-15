@@ -102,6 +102,14 @@ def interact_with_model(model, tokenizer):
         # Print tokens as they're generated
         generated_text = ""
         for new_text in streamer:
+            # Check if the model is trying to start a new turn
+            if "Human:" in new_text or "\nHuman:" in generated_text + new_text:
+                # Stop generation if model tries to create a new human turn
+                break
+            if "Assistant:" in new_text and generated_text:
+                # Stop if model tries to create a new assistant turn
+                break
+            
             print(new_text, end="", flush=True)
             generated_text += new_text
             # Add a small delay to make the streaming more visible
