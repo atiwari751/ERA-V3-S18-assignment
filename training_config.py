@@ -37,5 +37,4 @@ def get_sft_config():
     return {
         "max_seq_length": 512,
         "dataset_text_field": "text",  # Will be updated by preprocessing
-        "packing": True,  # Enable packing of sequences for efficient training
     } 

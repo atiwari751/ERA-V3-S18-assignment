@@ -16,10 +16,14 @@ def load_model_and_tokenizer():
     """Load the phi-2 model and tokenizer in 4-bit precision"""
     print("Loading phi-2 model and tokenizer in 4-bit precision...")
     
+    # Get SFT configuration to access max_seq_length
+    sft_config = get_sft_config()
+    
     # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         "microsoft/phi-2", 
-        trust_remote_code=True
+        trust_remote_code=True,
+        model_max_length=sft_config["max_seq_length"]  # Set max length here
     )
     tokenizer.pad_token = tokenizer.eos_token
     
@@ -65,18 +69,12 @@ def train_model(model, tokenizer, dataset):
     # Get training arguments
     training_args = get_training_arguments()
     
-    # Get SFT configuration
-    sft_config = get_sft_config()
-    
-    # Create SFT Trainer
+    # Create SFT Trainer with minimal parameters
     trainer = SFTTrainer(
         model=model,
         train_dataset=dataset,
         args=training_args,
-        tokenizer=tokenizer,
-        max_seq_length=sft_config["max_seq_length"],
-        dataset_text_field=sft_config["dataset_text_field"],
-        packing=sft_config["packing"],
+        tokenizer=tokenizer,  # This will show a deprecation warning but still works
     )
     
     # Start training
