@@ -4,6 +4,9 @@ from datasets import load_dataset
 import os
 from peft import prepare_model_for_kbit_training
 from lora_config import setup_lora_for_model
+from training_config import get_training_arguments, get_sft_config
+from preprocess import preprocess_open_assistant_dataset
+from trl import SFTTrainer
 
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -51,9 +54,40 @@ def load_open_assistant_dataset():
     
     # Print dataset info
     print(f"Dataset loaded with {len(dataset)} examples")
-    print(f"Sample example: {dataset[0]}")
+    #print(f"Sample example: {dataset[0]}")
     
     return dataset
+
+def train_model(model, tokenizer, dataset):
+    """Set up and run the training loop"""
+    print("Setting up training...")
+    
+    # Get training arguments
+    training_args = get_training_arguments()
+    
+    # Get SFT configuration
+    sft_config = get_sft_config()
+    
+    # Create SFT Trainer
+    trainer = SFTTrainer(
+        model=model,
+        train_dataset=dataset,
+        args=training_args,
+        tokenizer=tokenizer,
+        max_seq_length=sft_config["max_seq_length"],
+        dataset_text_field=sft_config["dataset_text_field"],
+        packing=sft_config["packing"],
+    )
+    
+    # Start training
+    print("Starting training...")
+    trainer.train()
+    
+    # Save the final model
+    print("Training complete! Saving model...")
+    trainer.save_model("./final_model")
+    
+    return trainer
 
 if __name__ == "__main__":
     # Load model and tokenizer
@@ -63,11 +97,12 @@ if __name__ == "__main__":
     model = setup_lora_for_model(model)
     
     # Load dataset
-    dataset = load_open_assistant_dataset()
+    raw_dataset = load_open_assistant_dataset()
     
-    print("Successfully loaded model and dataset!")
+    # Preprocess the dataset
+    processed_dataset = preprocess_open_assistant_dataset(raw_dataset)
     
-    # Next steps will include:
-    # 1. Preprocessing the dataset
-    # 2. Setting up training arguments
-    # 3. Fine-tuning the model
+    # Train the model
+    trainer = train_model(model, tokenizer, processed_dataset)
+    
+    print("Fine-tuning process completed successfully!")
