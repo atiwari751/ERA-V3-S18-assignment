@@ -22,6 +22,11 @@ Try the model on Hugging Face Spaces: Phi-2 Fine-tuned Assistant
 
 * Base model: Microsoft Phi-2 (2.7B parameters)
 * Fine-tuning method: Low-Rank Adaptation (LoRA)
+* LoRA parameters: 7,864,320 trainable parameters (0.28% of base model)
+* LoRA configuration:
+  *  Rank (r): 16
+  * Alpha: 32
+  * Target modules: Attention (q_proj, k_proj, v_proj, o_proj) and MLP (gate_proj, up_proj, down_proj)
 * Quantization: 4-bit precision (NF4)
 * Training dataset: Open Assistant (oasst1)
 
